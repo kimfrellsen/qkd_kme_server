@@ -63,8 +63,14 @@ impl<T: crate::routes::Routes> AuthHttpsServer<T> {
     /// # Returns
     /// A new AuthHttpsServer
     pub fn new(listen_addr: &str, ca_client_cert_path: &str, server_cert_path: &str, server_key_path: &str) -> AuthHttpsServer<T> {
-        #[cfg(target_os = "macos")]
-        let _ = rustls::crypto::ring::default_provider().install_default();
+        let _ = rustls::crypto::CryptoProvider {
+            kx_groups: vec![
+                rustls::crypto::aws_lc_rs::kx_group::X25519MLKEM768,
+                rustls::crypto::aws_lc_rs::kx_group::X25519,
+                rustls::crypto::aws_lc_rs::kx_group::SECP256R1,
+            ],
+            ..rustls::crypto::aws_lc_rs::default_provider()
+        }.install_default();
         AuthHttpsServer {
             phantom: PhantomData,
             listen_addr: listen_addr.to_string(),
