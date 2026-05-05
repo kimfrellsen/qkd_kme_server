@@ -143,11 +143,12 @@ impl KeyHandler {
     /// # Arguments
     /// * `kme_id` - The ID of the KME to add
     /// * `kme_addr` - The IP address and port of the KME, in the form "ip:port" or "domain:port"
-    /// * `client_auth_certificate_path` - The path to the client authentication certificate to use when connecting to the KME
-    /// * `client_auth_certificate_password` - The password for the client authentication certificate
+    /// * `client_auth_certificate_path` - Path to PEM or PFX file containing the client certificate chain and private key
+    /// * `client_auth_certificate_password` - Password for the client certificate (if PFX)
+    /// * `inter_kme_server_ca_certificate_path` - Optional path to PEM CA certificate used to verify the peer KME's server certificate
     /// * `should_ignore_system_proxy_config` - Whether to ignore the system proxy configuration when connecting to the KME
-    pub(crate) async fn add_kme_classical_net_info(&self, kme_id: KmeId, kme_addr: &str, client_auth_certificate_path: &str, client_auth_certificate_password: &str, should_ignore_system_proxy_config: bool) -> Result<QkdManagerResponse, QkdManagerResponse>  {
-        match self.qkd_router.as_ref().write().await.add_kme_to_ip_domain_port_association(kme_id, &kme_addr, &client_auth_certificate_path, &client_auth_certificate_password, should_ignore_system_proxy_config) {
+    pub(crate) async fn add_kme_classical_net_info(&self, kme_id: KmeId, kme_addr: &str, client_auth_certificate_path: &str, client_auth_certificate_password: &str, inter_kme_server_ca_certificate_path: Option<&str>, should_ignore_system_proxy_config: bool) -> Result<QkdManagerResponse, QkdManagerResponse>  {
+        match self.qkd_router.as_ref().write().await.add_kme_to_ip_domain_port_association(kme_id, &kme_addr, &client_auth_certificate_path, client_auth_certificate_password, inter_kme_server_ca_certificate_path, should_ignore_system_proxy_config) {
             Ok(_) => Ok(QkdManagerResponse::Ok),
             Err(e) => {
                 error!("Error adding KME classical network info: {:?}", e);
@@ -622,7 +623,15 @@ impl KeyHandler {
         let kme_client = match maybe_client {
             Some(client) => client.clone(),
             None => {
-                let kme_client_builder = reqwest::Client::builder().identity(kme_classical_info.tls_client_cert_identity.clone());
+                let kme_client_builder = reqwest::Client::builder()
+                    .use_rustls_tls()
+                    .identity(kme_classical_info.tls_client_cert_identity.clone());
+
+                let kme_client_builder = if let Some(ca_cert) = kme_classical_info.inter_kme_server_ca_cert.clone() {
+                    kme_client_builder.add_root_certificate(ca_cert)
+                } else {
+                    kme_client_builder
+                };
 
                 let kme_client_builder = if danger_should_ignore_remote_kme_cert {
                     warn!("Because of {}, remote KME server certificate check is disabled. This is a dangerous setting, it breaks the whole protocol security", crate::DANGER_IGNORE_CERTS_INTER_KME_NETWORK_ENV_VARIABLE);

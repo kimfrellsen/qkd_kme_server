@@ -7,15 +7,8 @@ use tokio::runtime::Runtime;
 mod common;
 
 fn spawn_server() {
-    #[cfg(not(target_os = "macos"))]
     const CONFIG_KME1_PATH: &'static str = "benches/data/test_kme_config.json5";
-    #[cfg(target_os = "macos")]
-    const CONFIG_KME1_PATH: &'static str = "benches/data/test_kme_config_macos.json5";
-
-    #[cfg(not(target_os = "macos"))]
     const CONFIG_KME2_PATH: &'static str = "benches/data/test_kme2_config.json5";
-    #[cfg(target_os = "macos")]
-    const CONFIG_KME2_PATH: &'static str = "benches/data/test_kme2_config_macos.json5";
 
     thread::spawn(|| {
         let rt = Runtime::new().unwrap();

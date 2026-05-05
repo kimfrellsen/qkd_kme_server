@@ -232,13 +232,11 @@ impl QkdManager {
     /// * `client_auth_certificate_password` - The password of the client authentication certificate of the KME
     /// # Returns
     /// Ok if the KME classical network information was added successfully, an error otherwise
-    /// # Notes
-    /// You should also add target KME's CA certificate to the trust store of the source KME operating system
-    pub async fn add_kme_classical_net_info(&self, kme_id: KmeId, kme_addr: &str, client_auth_certificate_path: &str, client_auth_certificate_password: &str, should_ignore_system_proxy_config: bool) -> Result<QkdManagerResponse, QkdManagerResponse> {
+    pub async fn add_kme_classical_net_info(&self, kme_id: KmeId, kme_addr: &str, client_auth_certificate_path: &str, client_auth_certificate_password: &str, inter_kme_server_ca_certificate_path: Option<&str>, should_ignore_system_proxy_config: bool) -> Result<QkdManagerResponse, QkdManagerResponse> {
         const EXPECTED_QKD_MANAGER_RESPONSE: QkdManagerResponse = QkdManagerResponse::Ok;
 
         let add_kme_info_qkd_manager_response = self.key_handler.add_kme_classical_net_info(
-            kme_id, kme_addr, client_auth_certificate_path, client_auth_certificate_password, should_ignore_system_proxy_config
+            kme_id, kme_addr, client_auth_certificate_path, client_auth_certificate_password, inter_kme_server_ca_certificate_path, should_ignore_system_proxy_config
         ).await?;
 
         if add_kme_info_qkd_manager_response != EXPECTED_QKD_MANAGER_RESPONSE {
@@ -707,34 +705,23 @@ mod test {
     #[tokio::test]
     async fn test_add_kme_classical_net_info() {
         const DB_URI: &'static str = ":memory:";
-
-        #[cfg(not(target_os = "macos"))]
-        const KME1_TO_KME2_CLIENT_AUTH_CERT_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pfx";
-        #[cfg(target_os = "macos")]
         const KME1_TO_KME2_CLIENT_AUTH_CERT_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pem";
 
         let qkd_manager = super::QkdManager::new(DB_URI, 1, &Some("Alice".to_string())).await.unwrap();
 
-        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234;bad_addr", KME1_TO_KME2_CLIENT_AUTH_CERT_PATH, "password", true).await;
+        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234;bad_addr", KME1_TO_KME2_CLIENT_AUTH_CERT_PATH, "", None, true).await;
         assert!(response.is_err());
         assert_eq!(response.err().unwrap(), QkdManagerResponse::Ko);
 
-        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", "not-exists.pfx", "", true).await;
+        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", "not-exists.pem", "", None, true).await;
         assert!(response.is_err());
         assert_eq!(response.err().unwrap(), QkdManagerResponse::Ko);
 
-        #[cfg(not(target_os = "macos"))]
-        {
-        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", "certs/inter_kmes/kme1-to-kme2.pfx", "bad_password", true).await;
-        assert!(response.is_err());
-        assert_eq!(response.err().unwrap(), QkdManagerResponse::Ko);
-        }
-
-        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", "tests/data/bad_certs/invalid_client_cert_data.pfx", "", true).await;
+        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", "tests/data/bad_certs/invalid_client_cert_data.pem", "", None, true).await;
         assert!(response.is_err());
         assert_eq!(response.err().unwrap(), QkdManagerResponse::Ko);
 
-        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", KME1_TO_KME2_CLIENT_AUTH_CERT_PATH, "password", true).await;
+        let response = qkd_manager.add_kme_classical_net_info(1, "test.fr:1234", KME1_TO_KME2_CLIENT_AUTH_CERT_PATH, "", None, true).await;
         assert!(response.is_ok());
         assert_eq!(response.unwrap(), QkdManagerResponse::Ok);
     }

@@ -161,7 +161,8 @@ impl ConfigExtractor {
             qkd_manager.add_kme_classical_net_info(other_kme_config.id,
                                                    &other_kme_config.inter_kme_bind_address,
                                                    &other_kme_config.https_client_authentication_certificate,
-                                                   &other_kme_config.https_client_authentication_certificate_password,
+                                                   other_kme_config.https_client_authentication_certificate_password.as_deref().unwrap_or(""),
+                                                   other_kme_config.https_server_ca_certificate_path.as_deref(),
                                                     other_kme_config.ignore_system_proxy_settings.unwrap_or(DEFAULT_SHOULD_IGNORE_SYSTEM_PROXY_INTER_KME)).await
                 .map_err(|e|
                     io_err(&format!("Cannot add KME classical network info: {:?}", e))
@@ -182,10 +183,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn test_extract_config_to_qkd_manager() {
-        #[cfg(not(target_os = "macos"))]
         const CONFIG_PATH: &'static str = "tests/data/test_kme_config.json5";
-        #[cfg(target_os = "macos")]
-        const CONFIG_PATH: &'static str = "tests/data/test_kme_config_macos.json5";
 
         let config = Config::from_json_path(CONFIG_PATH).unwrap();
         let qkd_manager = ConfigExtractor::extract_config_to_qkd_manager(&config).await.unwrap();

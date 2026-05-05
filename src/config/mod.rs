@@ -94,10 +94,12 @@ pub struct OtherKmeConfig {
     pub(crate) inter_kme_bind_address: String,
     /// If true, the KME will ignore system proxy settings when contacting the other KME. Defaults to false if not set.
     pub(crate) ignore_system_proxy_settings: Option<bool>,
-    /// Client certificate for inter KME HTTPS authentication
+    /// Client certificate for inter KME HTTPS authentication (PEM format: cert chain + private key concatenated)
     pub(crate) https_client_authentication_certificate: String,
-    /// Password for the client certificate
-    pub(crate) https_client_authentication_certificate_password: String
+    /// Password for the client certificate (required for PKCS#12/.pfx; ignored for PEM)
+    pub(crate) https_client_authentication_certificate_password: Option<String>,
+    /// CA certificate used to verify the peer KME's server certificate (PEM format). If absent, relies on platform root store.
+    pub(crate) https_server_ca_certificate_path: Option<String>,
 }
 
 /// Config for specific SAE: its ID, KME ID and optional client certificate serial
@@ -138,8 +140,9 @@ mod tests {
         assert_eq!(config.other_kme_configs[0].key_directory_to_watch, "tests/data/raw_keys/kme-1-2");
         assert_eq!(config.other_kme_configs[0].inter_kme_bind_address, "127.0.0.1:4001");
         assert_eq!(config.other_kme_configs[0].ignore_system_proxy_settings, None);
-        assert_eq!(config.other_kme_configs[0].https_client_authentication_certificate, "certs/inter_kmes/kme1-to-kme2.pfx");
-        assert_eq!(config.other_kme_configs[0].https_client_authentication_certificate_password, "password");
+        assert_eq!(config.other_kme_configs[0].https_client_authentication_certificate, "certs/inter_kmes/kme1-to-kme2.pem");
+        assert_eq!(config.other_kme_configs[0].https_client_authentication_certificate_password, Some("password".to_string()));
+        assert_eq!(config.other_kme_configs[0].https_server_ca_certificate_path, None);
         assert_eq!(config.sae_configs.len(), 3);
         assert_eq!(config.sae_configs[0].id, 1);
         assert_eq!(config.sae_configs[0].kme_id, 1);

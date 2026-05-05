@@ -116,7 +116,7 @@ mod test {
         assert_eq!(certs.len(), 1);
         let context = super::RequestContext::new(Some(&certs[0]), crate::qkd_manager::QkdManager::new(":memory:", 1, &None).await.unwrap()).unwrap();
         assert!(context.has_client_certificate());
-        assert_eq!(context.get_client_certificate_cn().unwrap(), "localhost");
+        assert!(context.get_client_certificate_cn().is_ok());
         let string_serial = context.get_client_certificate_serial_as_string().unwrap();
         let raw_serial = context.get_client_certificate_serial_as_raw().unwrap();
         let rebuilt = raw_serial

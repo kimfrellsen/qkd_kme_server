@@ -3,8 +3,6 @@
 pub mod util;
 pub mod objects;
 
-use std::fs::File;
-use std::io::Read;
 use std::sync::Arc;
 use log::error;
 use tokio::select;
@@ -141,15 +139,8 @@ pub async fn setup_lot_of_stored_keys_inserted_at_once() {
 }
 
 pub fn setup_cert_auth_reqwest_client() -> reqwest::Client {
-    #[cfg(not(target_os = "macos"))]
-    const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_1.pfx";
-    #[cfg(target_os = "macos")]
     const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_1_cert.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    let client_cert_id = generate_reqwest_cert_identity_nativetls(SAE_AUTH_CLIENT_CERT_PATH, "password");
-    #[cfg(target_os = "macos")]
-    let client_cert_id = generate_reqwest_cert_identity_rustls(SAE_AUTH_CLIENT_CERT_PATH);
+    let client_cert_id = generate_reqwest_cert_identity(SAE_AUTH_CLIENT_CERT_PATH);
     reqwest::Client::builder()
         .identity(client_cert_id)
         .danger_accept_invalid_certs(true) // Instead of importing root certificate
@@ -157,16 +148,8 @@ pub fn setup_cert_auth_reqwest_client() -> reqwest::Client {
 }
 
 pub fn setup_cert_auth_reqwest_client_2() -> reqwest::Client {
-    #[cfg(not(target_os = "macos"))]
-    const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_2.pfx";
-    #[cfg(target_os = "macos")]
     const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_2_cert.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    let client_cert_id = generate_reqwest_cert_identity_nativetls(SAE_AUTH_CLIENT_CERT_PATH, "password");
-    #[cfg(target_os = "macos")]
-    let client_cert_id = generate_reqwest_cert_identity_rustls(SAE_AUTH_CLIENT_CERT_PATH);
-
+    let client_cert_id = generate_reqwest_cert_identity(SAE_AUTH_CLIENT_CERT_PATH);
     reqwest::Client::builder()
         .identity(client_cert_id)
         .danger_accept_invalid_certs(true) // Instead of importing root certificate
@@ -174,16 +157,8 @@ pub fn setup_cert_auth_reqwest_client_2() -> reqwest::Client {
 }
 
 pub fn setup_cert_auth_reqwest_client_remote_kme() -> reqwest::Client {
-    #[cfg(not(target_os = "macos"))]
-    const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-2-local-zone/client_3.pfx";
-    #[cfg(target_os = "macos")]
     const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-2-local-zone/client_3_cert.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    let client_cert_id = generate_reqwest_cert_identity_nativetls(SAE_AUTH_CLIENT_CERT_PATH, "password");
-    #[cfg(target_os = "macos")]
-    let client_cert_id = generate_reqwest_cert_identity_rustls(SAE_AUTH_CLIENT_CERT_PATH);
-
+    let client_cert_id = generate_reqwest_cert_identity(SAE_AUTH_CLIENT_CERT_PATH);
     reqwest::Client::builder()
         .identity(client_cert_id)
         .danger_accept_invalid_certs(true) // Instead of importing root certificate
@@ -191,16 +166,8 @@ pub fn setup_cert_auth_reqwest_client_remote_kme() -> reqwest::Client {
 }
 
 pub fn setup_cert_auth_reqwest_client_unregistered_sae() -> reqwest::Client {
-    #[cfg(not(target_os = "macos"))]
-    const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_2.pfx";
-    #[cfg(target_os = "macos")]
     const SAE_AUTH_CLIENT_CERT_PATH: &'static str = "certs/kme-1-local-zone/client_2_cert.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    let client_cert_id = generate_reqwest_cert_identity_nativetls(SAE_AUTH_CLIENT_CERT_PATH, "password");
-    #[cfg(target_os = "macos")]
-    let client_cert_id = generate_reqwest_cert_identity_rustls(SAE_AUTH_CLIENT_CERT_PATH);
-
+    let client_cert_id = generate_reqwest_cert_identity(SAE_AUTH_CLIENT_CERT_PATH);
     reqwest::Client::builder()
         .identity(client_cert_id)
         .danger_accept_invalid_certs(true) // Instead of importing root certificate
@@ -208,16 +175,8 @@ pub fn setup_cert_auth_reqwest_client_unregistered_sae() -> reqwest::Client {
 }
 
 pub fn setup_cert_auth_reqwest_bad_client() -> reqwest::Client {
-    #[cfg(not(target_os = "macos"))]
-    const BAD_CLIENT_CLIENT_CERT_PATH: &'static str = "tests/data/bad_certs/bad_client.pfx";
-    #[cfg(target_os = "macos")]
     const BAD_CLIENT_CLIENT_CERT_PATH: &'static str = "tests/data/bad_certs/bad_client.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    let client_cert_id = generate_reqwest_cert_identity_nativetls(BAD_CLIENT_CLIENT_CERT_PATH, "");
-    #[cfg(target_os = "macos")]
-    let client_cert_id = generate_reqwest_cert_identity_rustls(BAD_CLIENT_CLIENT_CERT_PATH);
-
+    let client_cert_id = generate_reqwest_cert_identity(BAD_CLIENT_CLIENT_CERT_PATH);
     reqwest::Client::builder()
         .identity(client_cert_id)
         .danger_accept_invalid_certs(true) // Instead of importing root certificate
@@ -225,14 +184,7 @@ pub fn setup_cert_auth_reqwest_bad_client() -> reqwest::Client {
 }
 
 pub async fn setup_2_kmes_network() {
-    #[cfg(not(target_os = "macos"))]
-    const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pfx";
-    #[cfg(target_os = "macos")]
     const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    const KME2_TO_KME1_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme2-to-kme1.pfx";
-    #[cfg(target_os = "macos")]
     const KME2_TO_KME1_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme2-to-kme1.pem";
 
     let kme1_internal_sae_server = qkd_kme_server::server::auth_https_server::AuthHttpsServer::<EtsiSaeQkdRoutesV1>::new(
@@ -270,7 +222,7 @@ pub async fn setup_2_kmes_network() {
                              2,
                              &None
     ).await.unwrap();
-    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "password", true).await.unwrap();
+    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "", None, true).await.unwrap();
     kme1_qkd_manager.add_pre_init_qkd_key(PreInitQkdKeyWrapper::new(
         2,
         b"this_is_secret_key_1_of_32_bytes",
@@ -289,7 +241,7 @@ pub async fn setup_2_kmes_network() {
                              2,
                              &Some(vec![0x2d, 0x28, 0x6e, 0xc1, 0x77, 0x46, 0x5a, 0xb8, 0xdf, 0x00, 0x90, 0xdb, 0x04, 0x69, 0xa0, 0xab, 0x0a, 0x97, 0x38, 0x51])
     ).await.unwrap();
-    kme2_qkd_manager.add_kme_classical_net_info(1, "127.0.0.1:3001", KME2_TO_KME1_CERT_AUTH_PATH, "password", true).await.unwrap();
+    kme2_qkd_manager.add_kme_classical_net_info(1, "127.0.0.1:3001", KME2_TO_KME1_CERT_AUTH_PATH, "", None, true).await.unwrap();
     kme2_qkd_manager.add_pre_init_qkd_key(PreInitQkdKeyWrapper::new(
         1,
         b"this_is_secret_key_1_of_32_bytes",
@@ -318,14 +270,7 @@ pub async fn setup_2_kmes_network() {
 }
 
 pub async fn setup_2_kmes_network_keys_not_sync() {
-    #[cfg(not(target_os = "macos"))]
-    const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pfx";
-    #[cfg(target_os = "macos")]
     const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pem";
-
-    #[cfg(not(target_os = "macos"))]
-    const KME2_TO_KME1_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme2-to-kme1.pfx";
-    #[cfg(target_os = "macos")]
     const KME2_TO_KME1_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme2-to-kme1.pem";
 
     let kme1_internal_sae_server = qkd_kme_server::server::auth_https_server::AuthHttpsServer::<EtsiSaeQkdRoutesV1>::new(
@@ -363,7 +308,7 @@ pub async fn setup_2_kmes_network_keys_not_sync() {
                              2,
                              &None
     ).await.unwrap();
-    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "password", true).await.unwrap();
+    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "", None, true).await.unwrap();
     kme1_qkd_manager.add_pre_init_qkd_key(PreInitQkdKeyWrapper::new(
         2,
         b"this_is_secret_key_1_of_32_bytes",
@@ -378,7 +323,7 @@ pub async fn setup_2_kmes_network_keys_not_sync() {
                              2,
                              &Some(vec![0x2d, 0x28, 0x6e, 0xc1, 0x77, 0x46, 0x5a, 0xb8, 0xdf, 0x00, 0x90, 0xdb, 0x04, 0x69, 0xa0, 0xab, 0x0a, 0x97, 0x38, 0x51])
     ).await.unwrap();
-    kme2_qkd_manager.add_kme_classical_net_info(1, "127.0.0.1:3001", KME2_TO_KME1_CERT_AUTH_PATH, "password", true).await.unwrap();
+    kme2_qkd_manager.add_kme_classical_net_info(1, "127.0.0.1:3001", KME2_TO_KME1_CERT_AUTH_PATH, "", None, true).await.unwrap();
     kme2_qkd_manager.add_pre_init_qkd_key(PreInitQkdKeyWrapper::new(
         1,
         // Aie aie aie, this is not the same key :o
@@ -404,9 +349,6 @@ pub async fn setup_2_kmes_network_keys_not_sync() {
 }
 
 pub async fn setup_2_kmes_network_1_kme_down() {
-    #[cfg(not(target_os = "macos"))]
-    const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pfx";
-    #[cfg(target_os = "macos")]
     const KME1_TO_KME2_CERT_AUTH_PATH: &'static str = "certs/inter_kmes/kme1-to-kme2.pem";
 
     let kme1_internal_sae_server = qkd_kme_server::server::auth_https_server::AuthHttpsServer::<EtsiSaeQkdRoutesV1>::new(
@@ -431,7 +373,7 @@ pub async fn setup_2_kmes_network_1_kme_down() {
                              2,
                              &None
     ).await.unwrap();
-    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "password", true).await.unwrap();
+    kme1_qkd_manager.add_kme_classical_net_info(2, "127.0.0.1:4001", KME1_TO_KME2_CERT_AUTH_PATH, "", None, true).await.unwrap();
     kme1_qkd_manager.add_pre_init_qkd_key(PreInitQkdKeyWrapper::new(
         2,
         b"this_is_secret_key_1_of_32_bytes",
@@ -499,17 +441,8 @@ pub async fn setup_2_kmes_network_missing_conf() {
     });
 }
 
-#[cfg(not(target_os = "macos"))]
-fn generate_reqwest_cert_identity_nativetls(client_auth_cert_path: &str, password: &str) -> reqwest::tls::Identity {
-    let mut buf = Vec::new();
-    File::open(client_auth_cert_path).unwrap().read_to_end(&mut buf).unwrap();
-    reqwest::Identity::from_pkcs12_der(&buf, password).unwrap()
-}
-
-#[cfg(target_os = "macos")]
-fn generate_reqwest_cert_identity_rustls(client_auth_cert_path: &str) -> reqwest::tls::Identity {
-    let mut buf = Vec::new();
-    File::open(client_auth_cert_path).unwrap().read_to_end(&mut buf).unwrap();
+fn generate_reqwest_cert_identity(client_auth_cert_path: &str) -> reqwest::tls::Identity {
+    let buf = std::fs::read(client_auth_cert_path).unwrap();
     reqwest::Identity::from_pem(&buf).unwrap()
 }
 

@@ -33,16 +33,8 @@ futures = "0.3"
 uriparse = "0.6"
 sqlx-core = "0.8"
 
-[target.'cfg(target_os = "macos")'.dependencies]
-reqwest = { version = "0.13", features = ["rustls", "json"], default-features = false }
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "native-tls", "json"] }
 rustls = { version = "0.23", features = ["aws_lc_rs"] }
-
-[target.'cfg(not(target_os = "macos"))'.dependencies]
-reqwest = { version = "0.13" , features = ["native-tls", "json"] }
-rustls = { version = "0.23" }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-openssl = {version = "0.10", features = ["vendored"]} # To allow static linking on Linux
 
 [dev-dependencies]
 serial_test = "3.3"

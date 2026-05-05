@@ -1,19 +1,19 @@
 {
   "this_kme": {
     "id": 1, // KME id over KME network
-    "nickname": "Alice", // Optional KME nickname for logging
+    "nickname": "kme1", // Optional KME nickname for logging
     "db_uri": ":memory:", // SQLite db is in memory (could be a filename as well)
     "delete_key_file_after_read": false, // Whether to delete key files after reading them (for in-memory database, set to false)
     "key_directory_to_watch": "raw_keys/kme-1-1", // Quantum Key directory for SAEs belonging to this KME (only to be compliant with standard, as these SAEs can use public key cryptography directly)
     "saes_https_interface": {
-      "listen_address": "0.0.0.0:13000", // Listening address for connections of SAEs belonging to this KME
+      "listen_address": "192.168.252.4:13000", // Listening address for connections of SAEs belonging to this KME
       "ca_client_cert_path": "certs/kme-1-local-zone/ca.crt", // CA cert to validate SAE client certs
       "server_cert_path": "certs/kme-1-local-zone/kme_server.crt", // KME server cert for SAE connections
       "server_key_path": "certs/kme-1-local-zone/kme_server.key" // KME server key for SAE connections
     },
     "debugging_http_interface": "0.0.0.0:18080", // Optional HTTP debugging interface (unsecured, no auth)
     "kmes_https_interface": {
-      "listen_address": "0.0.0.0:13001", // Listening address for inter-KME connections
+      "listen_address": "192.168.252.4:13001", // Listening address for inter-KME connections
       "ca_client_cert_path": "certs/inter_kmes/ca_kme1.crt", // CA cert to validate inter-KME client certs
       "server_cert_path": "certs/inter_kmes/kme1_server.crt", // KME server cert for inter-KME connections
       "server_key_path": "certs/inter_kmes/kme1_server.key" // KME server key for inter-KME connections
@@ -23,10 +23,11 @@
     {
       "id": 2, // KME id of the other KME
       "key_directory_to_watch": "raw_keys/kme-1-2", // Quantum Key directory for communication between SAEs of KME 1 and KME 2
-      "inter_kme_bind_address": "localhost:14001", // Address of the other KME to connect to
+      "inter_kme_bind_address": "192.168.252.5:13001", // Address of the other KME to connect to
       "ignore_system_proxy_settings": true, // Ignore system proxy settings when connecting to the other KME. If not set, default to false
-      "https_client_authentication_certificate": "certs/inter_kmes/kme1-to-kme2.pfx", // Client cert to authenticate to the other KME
-      "https_client_authentication_certificate_password": "password" // Password for the client cert (empty if none)
+      "https_client_authentication_certificate": "certs/inter_kmes/kme1-to-kme2.pem", // Client cert to authenticate to the other KME
+      "https_client_authentication_certificate_password": "password", // Password for the client cert (empty if none)
+      "https_server_ca_certificate_path": "certs/inter_kmes/ca_kme2.crt" // CA cert to verify KME2's server certificate
     }
   ],
   "saes": [
@@ -34,57 +35,32 @@
       "id": 1, // SAE id over SAE network (must be unique for each SAE across the whole network)
       "kme_id": 1, // KME id this SAE belongs to
       "https_client_certificate_serial": [ // Expected serial number of the SAE's client certificate, if SAE belongs to this KME
-        0x70,
-        0xf4,
-        0x4f,
-        0x56,
-        0xc,
-        0x3f,
-        0x27,
-        0xd4,
-        0xb2,
-        0x11,
-        0xa4,
-        0x78,
-        0x13,
-        0xaf,
-        0xd0,
-        0x3c,
-        0x3,
-        0x81,
-        0x3b,
-        0x8e
-      ]
+            0x70,
+            0xf4,
+            0x4f,
+            0x56,
+            0xc,
+            0x3f,
+            0x27,
+            0xd4,
+            0xb2,
+            0x11,
+            0xa4,
+            0x78,
+            0x13,
+            0xaf,
+            0xd0,
+            0x3c,
+            0x3,
+            0x81,
+            0x3b,
+            0x8e
+          ]
     },
     {
       "id": 2, // SAE id over SAE network (must be unique for each SAE across the whole network)
-      "kme_id": 1, // KME id this SAE belongs to
-      "https_client_certificate_serial": [ // Expected serial number of the SAE's client certificate, if SAE belongs to this KME
-        0x70,
-        0xf4,
-        0x4f,
-        0x56,
-        0xc,
-        0x3f,
-        0x27,
-        0xd4,
-        0xb2,
-        0x11,
-        0xa4,
-        0x78,
-        0x13,
-        0xaf,
-        0xd0,
-        0x3c,
-        0x3,
-        0x81,
-        0x3b,
-        0x92
-      ]
-    },
-    {
-      "id": 3, // SAE id over SAE network (must be unique for each SAE across the whole network)
       "kme_id": 2 // KME id this SAE belongs to
     }
   ]
 }
+
